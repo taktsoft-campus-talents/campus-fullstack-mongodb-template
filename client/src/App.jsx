@@ -10,7 +10,6 @@ function App() {
       console.warn("Response is not OK!");
     }
     const data = await response.json();
-    console.log(data);
     setUsers(data);
   }
 
@@ -18,35 +17,58 @@ function App() {
     fetchUsers();
   }, []);
 
-  async function handleUserOnClick() {
+  async function handleOnSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const name = formData.get("name");
+    const age = formData.get("age");
+    const newUser = { name, age };
     const response = await fetch("http://localhost:3000/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "John Doe",
-        age: 29,
-      }),
+      body: JSON.stringify(newUser),
     });
+
     if (!response.ok) {
       console.warn("Response is not OK!");
     }
     fetchUsers();
-    console.debug("Good!");
+  }
+
+  function handleDelete(id) {
+    return async function () {
+      const response = await fetch(`http://localhost:3000/users/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        console.warn("Response is not OK!");
+      }
+      fetchUsers();
+    };
   }
 
   return (
     <div>
       <div>
+        <a href="/">reload</a>
+      </div>
+      <div>
         {users.map(({ _id, name, age }) => (
           <div key={_id}>
             <p>
-              {name} ({age})
+              {name} ({age}) <button onClick={handleDelete(_id)}>Delete</button>
             </p>
           </div>
         ))}
       </div>
-
-      <button onClick={handleUserOnClick}>add user</button>
+      <div>
+        <form onSubmit={handleOnSubmit}>
+          <input name="name" id="name" type="text" placeholder="Name" />
+          <input name="age" id="age" type="number" placeholder="Age" />
+          <button type="submit">Submit</button>
+          <button type="reset">Reset</button>
+        </form>
+      </div>
     </div>
   );
 }
